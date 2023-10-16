@@ -11,6 +11,7 @@ refOutput*.txt
 
 !controller
 !integrator
+!my_examples
 !ocp
 !ocp/robustification
 !simulation_environment
