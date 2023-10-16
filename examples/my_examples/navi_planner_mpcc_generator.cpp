@@ -16,15 +16,13 @@ int main()
     f << dot(theta) == v_theta;
 
     // Online data
-    //// weight (9)
+    //// weight (7)
     OnlineData w_e_c;
     OnlineData w_e_l;
     OnlineData w_phi;
     OnlineData w_theta;
-    OnlineData w_dv;
     OnlineData w_dphi_v;
     OnlineData w_dw;
-    OnlineData w_dv_theta;
     OnlineData w_ts;
 
     //// path (3)
@@ -32,17 +30,20 @@ int main()
     OnlineData x_d;
     OnlineData y_d;
 
-    //// kinematic constraints (4)
+    //// kinematic constraints (8)
     OnlineData v_max;
     OnlineData v_min;
     OnlineData w_max;
     OnlineData w_min;
+    OnlineData a_max;
+    OnlineData a_min;
+    OnlineData alpha_max;
+    OnlineData alpha_min;
 
-    //// previous inputs (4)
+    //// previous inputs (3)
     OnlineData v_prev;
     OnlineData phi_v_prev;
     OnlineData w_prev;
-    OnlineData v_theta_prev;
 
     //// terminal states (3)
     OnlineData phi_t;
@@ -50,25 +51,34 @@ int main()
     OnlineData y_t;
 
     // Problem formulation
-    OCP ocp(0.0, 3.0, 15);
-    ocp.setNOD(23);
+    double horizon = 3.0;
+    int steps = 15;
+    OCP ocp(0.0, horizon, steps);
+    ocp.setNOD(24);
     ocp.setModel(f);
 
     //// constraints
+    double dt = horizon / (double)steps;
     ocp.subjectTo(0.0 <= v - v_min);
+    ocp.subjectTo(0.0 <= v - (v_prev + a_min * dt));
     ocp.subjectTo(v - v_max <= 0.0);
+    ocp.subjectTo(v - (v_prev + a_max * dt) <= 0.0);
     ocp.subjectTo(v_theta - v <= 0.0);
     ocp.subjectTo(0.0 <= w - w_min);
+    ocp.subjectTo(0.0 <= w - (w_prev + alpha_min * dt));
     ocp.subjectTo(w - w_max <= 0.0);
+    ocp.subjectTo(w - (w_prev + alpha_max * dt) <= 0.0);
 
     //// cost function
     Expression cost_tracking = w_e_c * pow(sin(phi_d) * (x - x_d) - cos(phi_d) * (y - y_d), 2) +
                                w_e_l * pow(-cos(phi_d) * (x - x_d) - sin(phi_d) * (y - y_d), 2);
     Expression cost_evolution = w_theta * theta;
-    Expression cost_delta_inputs = w_dv * pow(v - v_prev, 2) + w_dphi_v * pow(phi_v - phi_v_prev, 2) +
-                                   w_dw * pow(w - w_prev, 2) + w_dv_theta * pow(v_theta - v_theta_prev, 2);
-    Expression cost_terminal_state = w_ts * (pow(x_t - x, 2) + pow(y_t - y, 2) + pow(phi_t - phi, 2));
-    Expression cost_heading = w_phi * pow(phi - phi_d, 2);
+    Expression cost_delta_inputs =
+        w_dphi_v * (pow(cos(phi_v) - cos(phi_v_prev), 2) + pow(sin(phi_v) - sin(phi_v_prev), 2)) +
+        w_dw * pow(w - w_prev, 2);
+    Expression cost_terminal_state =
+        w_ts * (pow(x_t - x, 2) + pow(y_t - y, 2) + pow(cos(phi_t) - cos(phi), 2) + pow(sin(phi_t) - sin(phi), 2));
+    Expression cost_heading = w_phi * (pow(cos(phi) - cos(phi_d), 2) + pow(sin(phi) - sin(phi_d), 2));
 
     ocp.minimizeLagrangeTerm(cost_tracking - cost_evolution + cost_delta_inputs + cost_terminal_state + cost_heading);
 
