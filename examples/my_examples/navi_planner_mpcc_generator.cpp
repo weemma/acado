@@ -16,13 +16,12 @@ int main()
     f << dot(theta) == v_theta;
 
     // Online data
-    //// weight (7)
+    //// weight (6)
     OnlineData w_e_c;
     OnlineData w_e_l;
     OnlineData w_theta;
     OnlineData w_dv;
     OnlineData w_dw;
-    OnlineData w_dv_theta;
     OnlineData w_ts;
 
     //// path (3)
@@ -36,10 +35,9 @@ int main()
     OnlineData w_max;
     OnlineData w_min;
 
-    //// previous inputs (3)
+    //// previous inputs (2)
     OnlineData v_prev;
     OnlineData w_prev;
-    OnlineData v_theta_prev;
 
     //// terminal states (3)
     OnlineData phi_t;
@@ -48,7 +46,7 @@ int main()
 
     // Problem formulation
     OCP ocp(0.0, 3.0, 15);
-    ocp.setNOD(20);
+    ocp.setNOD(18);
     ocp.setModel(f);
 
     //// constraints
@@ -62,7 +60,7 @@ int main()
     Expression cost_tracking = w_e_c * pow(sin(phi_d) * (x - x_d) - cos(phi_d) * (y - y_d), 2) +
                                w_e_l * pow(-cos(phi_d) * (x - x_d) - sin(phi_d) * (y - y_d), 2);
     Expression cost_evolution = w_theta * theta;
-    Expression cost_delta_inputs = w_dv * pow(v - v_prev, 2) + w_dw * pow(w - w_prev, 2) + w_dv_theta * pow(v_theta - v_theta_prev, 2);
+    Expression cost_delta_inputs = w_dv * pow(v - v_prev, 2) + w_dw * pow(w - w_prev, 2);
     Expression cost_terminal_state = w_ts * (pow(x_t - x, 2) + pow(y_t - y, 2) + pow(phi_t - phi, 2));
 
     ocp.minimizeLagrangeTerm(cost_tracking - cost_evolution + cost_delta_inputs + cost_terminal_state);
