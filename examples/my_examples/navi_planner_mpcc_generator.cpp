@@ -30,7 +30,7 @@ int main()
     OnlineData x_d;
     OnlineData y_d;
 
-    //// kinematic constraints (8)
+    //// kinematic constraints (9)
     OnlineData v_max;
     OnlineData v_min;
     OnlineData w_max;
@@ -39,6 +39,7 @@ int main()
     OnlineData a_min;
     OnlineData alpha_max;
     OnlineData alpha_min;
+    OnlineData v_to_stop;
 
     //// previous inputs (3)
     OnlineData v_prev;
@@ -54,7 +55,7 @@ int main()
     double horizon = 3.0;
     int steps = 15;
     OCP ocp(0.0, horizon, steps);
-    ocp.setNOD(24);
+    ocp.setNOD(25);
     ocp.setModel(f);
 
     //// constraints
@@ -63,6 +64,7 @@ int main()
     ocp.subjectTo(0.0 <= v - (v_prev + a_min * dt));
     ocp.subjectTo(v - v_max <= 0.0);
     ocp.subjectTo(v - (v_prev + a_max * dt) <= 0.0);
+    ocp.subjectTo(v - v_to_stop <= 0.0);
     ocp.subjectTo(v_theta - v <= 0.0);
     ocp.subjectTo(0.0 <= w - w_min);
     ocp.subjectTo(0.0 <= w - (w_prev + alpha_min * dt));
