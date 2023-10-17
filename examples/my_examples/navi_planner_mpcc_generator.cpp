@@ -30,6 +30,9 @@ int main()
     OnlineData x_d;
     OnlineData y_d;
 
+    //// static obstacle constraints (1)
+    OnlineData r_free;
+
     //// kinematic constraints (7)
     OnlineData v_max;
     OnlineData v_min;
@@ -53,11 +56,12 @@ int main()
     double horizon = 3.0;
     int steps = 15;
     OCP ocp(0.0, horizon, steps);
-    ocp.setNOD(23);
+    ocp.setNOD(24);
     ocp.setModel(f);
 
     //// constraints
     double dt = horizon / (double)steps;
+    ocp.subjectTo(pow(x_d - x, 2) + pow(y_d - y, 2) - pow(r_free, 2) <= 0.0);
     ocp.subjectTo(0.0 <= v - v_min);
     ocp.subjectTo(v - v_max <= 0.0);
     ocp.subjectTo(v - (v_prev + a_max * dt) <= 0.0);
