@@ -65,7 +65,7 @@ int main()
     ocp.subjectTo(0.0 <= v - v_min);
     ocp.subjectTo(v - v_max <= 0.0);
     ocp.subjectTo(v - (v_prev + a_max * dt) <= 0.0);
-    ocp.subjectTo(v - v_to_stop <= 0.0);
+    ocp.subjectTo(pow(v, 2) - pow(v_to_stop, 2) <= 0.0);
     ocp.subjectTo(v_theta - v <= 0.0);
     ocp.subjectTo(0.0 <= w - w_min);
     ocp.subjectTo(w - w_max <= 0.0);
