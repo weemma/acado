@@ -16,12 +16,13 @@ int main()
     f << dot(theta) == v_theta;
 
     // Online data
-    //// weight (6)
+    //// weight (7)
     OnlineData w_e_c;
     OnlineData w_e_l;
     OnlineData w_phi;
     OnlineData w_theta;
     OnlineData w_dphi_v;
+    OnlineData w_free_v;
     OnlineData w_ts;
 
     //// path (3)
@@ -55,7 +56,7 @@ int main()
     double horizon = 3.0;
     int steps = 15;
     OCP ocp(0.0, horizon, steps);
-    ocp.setNOD(23);
+    ocp.setNOD(24);
     ocp.setModel(f);
 
     //// constraints
@@ -73,14 +74,16 @@ int main()
     //// cost function
     Expression cost_tracking = w_e_c * pow(sin(phi_d) * (x - x_d) - cos(phi_d) * (y - y_d), 2) +
                                w_e_l * pow(-cos(phi_d) * (x - x_d) - sin(phi_d) * (y - y_d), 2);
+    Expression cost_heading = w_phi * (pow(cos(phi) - cos(phi_d), 2) + pow(sin(phi) - sin(phi_d), 2));
     Expression cost_evolution = w_theta * theta;
     Expression cost_delta_inputs =
         w_dphi_v * (pow(cos(phi_v) - cos(phi_v_prev), 2) + pow(sin(phi_v) - sin(phi_v_prev), 2));
+    Expression cost_free_v = w_free_v * pow(v, 2) / (r_free + 1e-3);
     Expression cost_terminal_state =
         w_ts * (pow(x_t - x, 2) + pow(y_t - y, 2) + pow(cos(phi_t) - cos(phi), 2) + pow(sin(phi_t) - sin(phi), 2));
-    Expression cost_heading = w_phi * (pow(cos(phi) - cos(phi_d), 2) + pow(sin(phi) - sin(phi_d), 2));
 
-    ocp.minimizeLagrangeTerm(cost_tracking - cost_evolution + cost_delta_inputs + cost_terminal_state + cost_heading);
+    ocp.minimizeLagrangeTerm(cost_tracking + cost_heading - cost_evolution + cost_delta_inputs + cost_free_v +
+                             cost_terminal_state);
 
     // Generate and export MPC code
     OCPexport mpc(ocp);
